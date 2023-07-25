@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vinaudit Demo</title>
+    <style>
+        /* Your CSS styles here */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 30px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        label {
+            margin-top: 10px;
+        }
+
+        input[type="text"] {
+            padding: 5px;
+            margin-top: 5px;
+        }
+
+        input[type="submit"] {
+            margin-top: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #processing {
+            display: none;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        #result {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 80%;
+            margin: 0 auto;
+            border: 1px solid #dddddd;
+            background-color: #f2f2f2;
+            box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+
+        td {
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Car Value Estimator</h1>
+    <form id="estimateForm">
+        <label for="vehicle">Vehicle:</label>
+        <input type="text" id="vehicle" name="vehicle" required>
+        <label for="mileage">Mileage:</label>
+        <input type="text" id="mileage" name="mileage"> <!-- Set the default value to 0 -->
+        <input type="submit" value="Submit">
+        <p id="processing">Processing...</p>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById("estimateForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            // Reset the content of the resultDiv on each form submission
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = "";
+
+            // Validate vehicle field (mandatory)
+            const vehicle = document.getElementById("vehicle").value;
+            if (!vehicle) {
+                alert("Vehicle field is mandatory. Please enter a vehicle.");
+                return;
+            }
+
+            // Validate mileage field (integer values only)
+            let mileage = document.getElementById("mileage").value;
+            if (mileage && !Number.isInteger(Number(mileage))) {
+                alert("Mileage must be an integer value.");
+                return;
+            }
+
+            // Show "Processing..." during API call
+            const processingElement = document.getElementById("processing");
+            processingElement.style.display = "block";
+
+            // Make API call to the backend using fetch
+            fetch('https://36bb-122-171-170-138.ngrok-free.app/api/estimate_value', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    vehicle: vehicle,
+                    mileage: mileage
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide "Processing..." after the response is received
+                processingElement.style.display = "none";
+
+                // Check if the API response status is true
+                if (data.status) {
+                    // Display the response on the page as a table
+                    const listingsTable = `
+                        <h2>Estimated Value: $${data.estimated_value}</h2>
+                        <h2>Data Used for Estimation</h2>
+                        <table>
+                            ${data.listings.map((listing, index) => {
+                                // Display the first row (header row) as bold
+                                if (index === 0) {
+                                    return `
+                                        <tr>
+                                            ${listing.map(value => `<th>${value}</th>`).join('')}
+                                        </tr>`;
+                                } else {
+                                    return `
+                                        <tr>
+                                            ${listing.map(value => `<td>${value}</td>`).join('')}
+                                        </tr>`;
+                                }
+                            }).join('')}
+                        </table>
+                    `;
+                    resultDiv.innerHTML = listingsTable;
+                } else {
+                    // Display the message received from the API response as an error message
+                    resultDiv.innerHTML = `
+                        <h2>Error:</h2>
+                        <p>${data.message}</p>
+                    `;
+                }
+            })
+            .catch(error => {
+                // Handle any errors that may occur during the API call
+                resultDiv.innerHTML = "<p>Error occurred while fetching data from the backend.</p>";
+            });
+        });
+    </script>
+</body>
+</html>
