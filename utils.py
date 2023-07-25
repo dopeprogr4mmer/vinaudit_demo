@@ -72,7 +72,6 @@ class ValueEstimator:
 		if not len(context_data):
 			return {"estimated_value": None, "listings": []}
 
-		mileage = int(mileage)
 		if mileage:
 			# Filtering dataframe to only non-zero mileage and non-zero price
 			context_data = context_data.loc[(context_data["Mileage"]!=0) & (context_data["Price"]!=0)]

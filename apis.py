@@ -11,11 +11,9 @@ class EstimateValueResource(Resource):
             parser.add_argument('vehicle', type=str, required=True)
             parser.add_argument('mileage', type=str, required=False, default='0')
             args = parser.parse_args(strict=True)
-            print(args)
             vehicle = args['vehicle']
             mileage = args['mileage']
             mileage = 0 if mileage=="" else int(mileage)
-            # mileage = int(args['mileage'])
             estimated_data = ValueEstimator().return_estimate(vehicle, mileage)
 
             resp = {"estimated_value": estimated_data["estimated_value"], "listings": estimated_data["listings"]}
